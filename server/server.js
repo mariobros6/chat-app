@@ -31,6 +31,17 @@ io.on('connection', (socket) => {
         createAt: 2313
     });
 
+    // welcome and joined
+    socket.emit('newMessage', {
+        from: 'admin',
+        text: 'welcome'
+    });
+
+    socket.broadcast.emit('newMessage', {
+        from: 'admin',
+        text: 'user joined'
+    })
+
     socket.on('createMessage', (message) => {
         console.log(message);
         // socket.emit('newMessage', message);
@@ -38,7 +49,13 @@ io.on('connection', (socket) => {
             from: message.from,
             text: message.text,
             createdAt: new Date().getTime(),
-        })
+        });
+
+        // socket.broadcast.emit('newMessage', {
+        //     from: message.from,
+        //     text: message.text,
+        //     createdAt: new Date().getTime(),
+        // })
     })
 });
 
@@ -56,7 +73,7 @@ app.use((req, res, next) => {
     // })
     next();
 });
- 
+
 // app.get('/', (req, res) => {
 //     res.sendFile(publicPath + '/index.html');
 //     // res.render(publicPath + '/index.html', {

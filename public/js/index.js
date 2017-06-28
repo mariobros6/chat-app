@@ -14,4 +14,5 @@ socket.on('newMessage', function(message) {
     console.log('new message');
     console.log(message);
 
-})
+});
+
