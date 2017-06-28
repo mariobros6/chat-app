@@ -23,6 +23,17 @@ io.on('connection', (socket) => {
 
     socket.on('disconnect', (socket) => {
         console.log('disss');
+    });
+
+    socket.emit('newMessage', {
+        from: 'mike',
+        text: 'what is going on',
+        createAt: 2313
+    });
+
+    socket.on('createMessage', (message) => {
+        console.log(message);
+        socket.emit('newMessage', message);
     })
 });
 
