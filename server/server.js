@@ -36,11 +36,11 @@ io.on('connection', (socket) => {
     //     text: 'welcome'
     // });
 
-    socket.on('createMessage', (message) => {
+    socket.on('createMessage', (message, callback) => {
         console.log(message);
         // socket.emit('newMessage', message);
         io.emit('newMessage', generateMessage(message.from,message.text));
-
+        callback('wiadomosc z serwera');
         // socket.broadcast.emit('newMessage', {
         //     from: message.from,
         //     text: message.text,
