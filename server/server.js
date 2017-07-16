@@ -14,7 +14,7 @@ const port = process.env.PORT || 3000;
 // });
 var server = http.createServer(app);
 var io = socketIO(server);
-var {generateMessage} = require('./utils/message');
+var {generateMessage, generateLocationMessage} = require('./utils/message');
 
 // app.use(bodyParser.json());
 app.use(express.static(publicPath))
@@ -46,6 +46,10 @@ io.on('connection', (socket) => {
         //     text: message.text,
         //     createdAt: new Date().getTime(),
         // })
+    });
+
+    socket.on('createLocationMessage', (coords) => {
+        io.emit('newLocationMessage', generateLocationMessage('admin', coords.latitude, coords.longitude))
     })
 });
 
