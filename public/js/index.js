@@ -11,10 +11,11 @@ socket.on('disconnect', function() {
 });
 
 socket.on('newMessage', function(message) {
+    var formatedTime = moment(message.createdAt).format('h:mm a');
     console.log('new message');
     console.log(message);
     var li = jQuery('<li></li>');
-    li.text(`${message.from}: ${message.text}`);
+    li.text(`${message.from} ${formatedTime}: ${message.text}`);
     console.log(li);
     $('#messages').append(li);
 });
@@ -27,9 +28,10 @@ socket.on('newMessage', function(message) {
 // });
 
 socket.on('newLocationMessage', function(message) {
+    var formatedTime = moment(message.createdAt).format('h:mm a');
     var li = jQuery('<li></li>');
     var a = $('<a target="_blank" >My current location</a>');
-    li.text(`${message.from}: `);
+    li.text(`${message.from} ${formatedTime}: `);
     a.attr('href', message.url);
     li.append(a);
     console.log(li);
@@ -38,11 +40,13 @@ socket.on('newLocationMessage', function(message) {
 
 jQuery('#message-form').on('submit', function(e) {
     e.preventDefault();
+    var messageTextBox = $('[name=message]');
     socket.emit('createMessage', {
         from: 'user',
-        text: $('[name=message]').val()
+        text: messageTextBox.val()
     }, function (data) {
         console.log(data);
+        messageTextBox.val('');
     });
 });
 
@@ -52,13 +56,16 @@ locationButton.on("click", function() {
     if (!navigator.geolocation) {
         return alert('geolocation not supported');
     }
+    locationButton.attr('disabled', 'disabled').text('Sending location...');
     navigator.geolocation.getCurrentPosition(function (position) {
         console.log(position);
         socket.emit('createLocationMessage', {
             latitude: position.coords.latitude,
             longitude: position.coords.longitude
-        })
+        });
+        locationButton.removeAttr('disabled').text('Send location');
     }, function(){
         alert('unable to get position');
+        locationButton.removeAttr('disabled').text('Send location');
     })
 })
