@@ -4,6 +4,11 @@ const express = require('express');
 const publicPath = path.join(__dirname, '/../public');
 const socketIO = require('socket.io');
 
+var {generateMessage, generateLocationMessage} = require('./utils/message');
+var {isRealString} = require('./utils/validation');
+var {Users} = require('./utils/users');
+
+
 console.log(__dirname + '/../public');
 console.log(publicPath);
 
@@ -14,21 +19,56 @@ const port = process.env.PORT || 3000;
 // });
 var server = http.createServer(app);
 var io = socketIO(server);
-var {generateMessage, generateLocationMessage} = require('./utils/message');
+var users = new Users();
 
 // app.use(bodyParser.json());
 app.use(express.static(publicPath))
 
 io.on('connection', (socket) => {
-    console.log('new user');
+    console.log('new user', socket.id);
 
-    socket.on('disconnect', (socket) => {
-        console.log('disss');
+    socket.on('join', (params, callback) => {
+        if (!isRealString(params.name) ||
+        !isRealString(params.room)) {
+            return callback('nazwa i pokoj wymagane');
+        }
+
+        socket.join(params.room);
+        users.removeUser(socket.id);
+        // console.log(socket.id, params.name, params.room);
+        users.addUser(socket.id, params.name, params.room);
+        // console.log(users.getUserList());
+        // socket.leave(roomname);
+
+        // metody emitów
+        // io.emit - do wszystkich podlaczonych userów
+        //  pokoje io.to(room) - do wszystkich w pokoju
+        // socket.broadcast.emit - do wszystkich poza aktyalnym userem
+        //  socket.broadcast.to(room) - do wszytskich w pokoju poza mną
+        // socket.emit - do konkretnego usera
+        //   
+        // socket.emit('newMessage', generateMessage('admin', 'welcome to chat app'));
+        // socket.broadcast.emit('newMessage', generateMessage('admin', 'user joinde'));
+
+        io.to(params.room).emit('updateUserList', users.getUserList(params.room));
+        socket.emit('newMessage', generateMessage('admin', 'welcome to chat app'));
+        socket.broadcast.to(params.room).emit('newMessage', generateMessage('admin', `user ${params.name} joinde`));
+
+
+        callback();
     });
 
-    socket.emit('newMessage', generateMessage('admin', 'welcome to chat app'));
+    socket.on('disconnect', () => {
+        // console.log('disss', socket.id);
+        var user = users.removeUser(socket.id);
 
-    socket.broadcast.emit('newMessage', generateMessage('admin', 'user joinde'));
+        if (user) {
+            io.to(user.room).emit('updateUserList', users.getUserList(user.room));
+            io.to(user.room).emit('newMessage', generateMessage('Admin', `user ${user.name} leaved`));
+        }
+    });
+
+    
 
     // // welcome and joined
     // socket.emit('newMessage', {

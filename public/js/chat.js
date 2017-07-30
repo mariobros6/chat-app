@@ -20,12 +20,34 @@ function scrollToBottom() {
 
 socket.on('connect', function() {
     console.log('connected');
-
+    var params = $.deparam();
+    socket.emit('join', params, function(err) {
+        if (err) {
+            alert(err);
+            window.location.href = '/';
+        } else {
+            console.log('no error');
+            
+        }
+    })
     // socket.emit('')
 });
 
 socket.on('disconnect', function() {
     console.log('disconnected');
+});
+
+socket.on('updateUserList', function(usersList) {
+    // console.log('userslist', usersList);
+    var ol = $('<ol></ol>');
+
+    usersList.forEach(function(name){
+        var li = $(`<li>${name}</li>`)
+        ol.append(li);
+
+    });
+    $('#users').html(ol);
+    
 });
 
 socket.on('newMessage', function(message) {
